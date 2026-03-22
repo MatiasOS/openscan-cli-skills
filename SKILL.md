@@ -1,5 +1,5 @@
 ---
-name: openscan
+name: openscan-cli-skills
 description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions on any EVM network — trace execution, decode reverts, analyze gas, state changes, call trees, opcodes. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Hardhat, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
 ---
 
@@ -58,6 +58,11 @@ openscan stats [--chain <chain>] [--strategy <strategy>] [--rpc <url>]
 - `latestBlocks` — 3 most recent blocks (number, hash, timestamp, gasUsed, gasLimit, txCount, baseFeePerGas)
 - `explorerLink` — Direct link to OpenScan explorer
 
+Take your time to think and deep research to provide a comprehensive analysis of the network stats, including:
+- Gas price trends and current levels (low/normal/high)
+- Block production health: recent blocks, gas usage, and any anomalies
+- Sync status and node health indicators
+
 **Bitcoin output fields:**
 - `networkId` — BIP-122 network identifier
 - `networkName` — Human-readable network name
@@ -72,6 +77,12 @@ openscan stats [--chain <chain>] [--strategy <strategy>] [--rpc <url>]
 - `latestBlocks` — 3 most recent blocks (height, hash, timestamp, txCount, size, weight, difficulty)
 - `explorerLink` — Link to mempool.space
 
+Provides a comprehensive analysis of the network stats, including:
+- Gas price trends and current levels (low/normal/high)
+- Block production health: recent blocks, gas usage, and any anomalies
+- For Bitcoin: mempool congestion and fee tier recommendations
+
+
 ### debug-tx — Transaction Debugger
 
 ```bash
@@ -79,6 +90,14 @@ openscan debug-tx <txHash> [--chain <chain>] [--rpc <url>]
 ```
 
 Debugs a transaction on any EVM network. Always includes execution trace and revert reason decoding. Requires the RPC node to support `debug_traceTransaction` (Hardhat, Anvil, Geth with `--http.api debug`, Erigon, etc.).
+
+Provides a comprehensive analysis of the transaction, including:
+- What Happened: Function calls, events, state changes
+- Why It Failed (if applicable): Revert reason decoding, call tree analysis, state change review
+- Gas Analysis: Total gas used, efficiency, and cost breakdown
+- Call Tree: Annotated call tree with decoded calls and errors
+- State Changes: Per-address balance, nonce, code, and storage diffs
+- Opcode Trace: Paginated step-by-step opcode execution with stack and storage snapshots
 
 **Output fields:**
 - `chainId` — Numeric chain ID
