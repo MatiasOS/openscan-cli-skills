@@ -9,7 +9,7 @@ import {
   runGasProfilerUseCase,
   runStateChangesUseCase,
   runRawTraceUseCase,
-} from "../../tx-analyser";
+} from "../tx-analyser";
 
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 

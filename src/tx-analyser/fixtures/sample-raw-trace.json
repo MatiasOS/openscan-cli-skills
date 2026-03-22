@@ -1,0 +1,37 @@
+{
+  "gas": 100000,
+  "failed": false,
+  "returnValue": "0x",
+  "structLogs": [
+    {
+      "pc": 0,
+      "op": "PUSH1",
+      "gas": 100000,
+      "gasCost": 3,
+      "depth": 1,
+      "stack": []
+    },
+    {
+      "pc": 1,
+      "op": "SLOAD",
+      "gas": 99997,
+      "gasCost": 100,
+      "depth": 1,
+      "stack": ["0x01"],
+      "storage": {
+        "01": "0x10"
+      }
+    },
+    {
+      "pc": 2,
+      "op": "SSTORE",
+      "gas": 99897,
+      "gasCost": 5000,
+      "depth": 1,
+      "stack": ["0x20", "0x01"],
+      "storage": {
+        "01": "0x10"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "CALL",
+  "from": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "to": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "gasUsed": "0x186a0",
+  "input": "0xa9059cbb000000000000000000000000cccccccccccccccccccccccccccccccccccccccc0000000000000000000000000000000000000000000000000000000000000064",
+  "calls": [
+    {
+      "type": "STATICCALL",
+      "from": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "to": "0xcccccccccccccccccccccccccccccccccccccccc",
+      "gasUsed": "0x2710",
+      "input": "0x70a08231000000000000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "type": "DELEGATECALL",
+      "from": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "to": "0xdddddddddddddddddddddddddddddddddddddddd",
+      "gasUsed": "0x4e20",
+      "error": "execution reverted"
+    }
+  ]
+}

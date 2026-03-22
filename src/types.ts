@@ -74,12 +74,12 @@ export interface TxDebugResult {
   } | null;
   revertReason: string | null;
   trace: any;
-  decodedEvents: import("../tx-analyser").EventsEntryOutput | null;
-  decodedInputData: import("../tx-analyser").InputDataEntryOutput | null;
-  callTree: import("../tx-analyser").CallTreeEntryOutput | null;
-  gasProfile: import("../tx-analyser").GasProfilerEntryOutput | null;
-  stateChanges: import("../tx-analyser").StateChangesEntryOutput | null;
-  rawTrace: import("../tx-analyser").RawTraceEntryOutput | null;
+  decodedEvents: import("./tx-analyser").EventsEntryOutput | null;
+  decodedInputData: import("./tx-analyser").InputDataEntryOutput | null;
+  callTree: import("./tx-analyser").CallTreeEntryOutput | null;
+  gasProfile: import("./tx-analyser").GasProfilerEntryOutput | null;
+  stateChanges: import("./tx-analyser").StateChangesEntryOutput | null;
+  rawTrace: import("./tx-analyser").RawTraceEntryOutput | null;
   explorerLink: string;
 }
 
