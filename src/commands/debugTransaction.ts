@@ -2,8 +2,22 @@ import type { OpenScanClient } from "../client";
 import { hexToDecimal, hexToBigInt, weiToGwei, weiToEth, decodeRevertReason } from "../formatter";
 import { getNetworkInfo } from "../metadata";
 import type { TxDebugResult, TxDebugLog } from "../types";
+import {
+  runEventsUseCase,
+  runInputDataUseCase,
+  runCallTreeUseCase,
+  runGasProfilerUseCase,
+  runStateChangesUseCase,
+  runRawTraceUseCase,
+} from "../../tx-analyser";
 
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+
+function addressExplorerLink(chainId: number, address: string): string {
+  return chainId === 31337
+    ? `http://localhost:8545/#/${chainId}/address/${address}`
+    : `https://openscan.eth.link/#/${chainId}/address/${address}`;
+}
 
 export async function debugTransaction(
   client: OpenScanClient,
@@ -20,11 +34,13 @@ export async function debugTransaction(
 
   const rpcClient = client.getClient(chainId);
 
-  // Parallel fetch tx, receipt, and trace (Hardhat always supports debug_traceTransaction)
-  const [txRes, receiptRes, traceRes] = await Promise.all([
+  // Parallel fetch tx, receipt, and all trace types
+  const [txRes, receiptRes, traceRes, prestateRes, structLogsRes] = await Promise.all([
     rpcClient.getTransactionByHash(txHash),
     rpcClient.getTransactionReceipt(txHash),
     rpcClient.debugTraceTransaction(txHash, { tracer: "callTracer" }),
+    rpcClient.debugTraceTransaction(txHash, { tracer: "prestateTracer", tracerConfig: { diffMode: true } }),
+    rpcClient.debugTraceTransaction(txHash, {}),
   ]);
 
   if (!txRes.data) {
@@ -34,13 +50,17 @@ export async function debugTransaction(
   const tx = txRes.data;
   const receipt = receiptRes.data;
   const trace = traceRes.data ?? null;
+  const prestateTrace = prestateRes.data ?? null;
+  const structLogsTrace = structLogsRes.data ?? null;
 
   // Build transaction section
   const gasLimit = hexToDecimal(tx.gas);
   const transaction = {
     hash: tx.hash,
     from: tx.from,
+    fromExplorerLink: addressExplorerLink(chainId, tx.from),
     to: tx.to ?? null,
+    toExplorerLink: tx.to ? addressExplorerLink(chainId, tx.to) : null,
     value: hexToBigInt(tx.value).toString(),
     valueEth: weiToEth(tx.value),
     nonce: hexToDecimal(tx.nonce),
@@ -85,6 +105,7 @@ export async function debugTransaction(
       effectiveGasPriceGwei: receipt.effectiveGasPrice ? weiToGwei(receipt.effectiveGasPrice) : null,
       gasEfficiency: `${((gasUsed / gasLimit) * 100).toFixed(2)}%`,
       contractAddress: receipt.contractAddress ?? null,
+      contractAddressExplorerLink: receipt.contractAddress ? addressExplorerLink(chainId, receipt.contractAddress) : null,
       logsCount: logs.length,
       logs,
     };
@@ -110,6 +131,36 @@ export async function debugTransaction(
     }
   }
 
+  // Decoded events
+  const decodedEvents = receipt
+    ? runEventsUseCase({
+        logs: (receipt.logs ?? []).map((log: any) => ({
+          address: log.address,
+          topics: log.topics,
+          data: log.data,
+        })),
+        txToAddress: tx.to ?? undefined,
+      })
+    : null;
+
+  // Decoded input data
+  const decodedInputData = tx.input
+    ? runInputDataUseCase({
+        inputData: tx.input,
+        txToAddress: tx.to ?? undefined,
+      })
+    : null;
+
+  // Call tree and gas profiler (from callTracer)
+  const callTree = trace ? runCallTreeUseCase({ root: trace }) : null;
+  const gasProfile = trace ? runGasProfilerUseCase({ root: trace }) : null;
+
+  // State changes (from prestateTracer)
+  const stateChanges = prestateTrace ? runStateChangesUseCase({ trace: prestateTrace }) : null;
+
+  // Raw trace (from structLogs)
+  const rawTrace = structLogsTrace ? runRawTraceUseCase({ trace: structLogsTrace }) : null;
+
   const networkInfo = await getNetworkInfo(chainId);
 
   return {
@@ -120,6 +171,12 @@ export async function debugTransaction(
     receipt: receiptResult,
     revertReason,
     trace,
+    decodedEvents,
+    decodedInputData,
+    callTree,
+    gasProfile,
+    stateChanges,
+    rawTrace,
     explorerLink: chainId === 31337
       ? `http://localhost:8545/#/${chainId}/tx/${txHash}`
       : `https://openscan.eth.link/#/${chainId}/tx/${txHash}`,

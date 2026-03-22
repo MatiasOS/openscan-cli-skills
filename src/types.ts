@@ -39,7 +39,9 @@ export interface TxDebugResult {
   transaction: {
     hash: string;
     from: string;
+    fromExplorerLink: string;
     to: string | null;
+    toExplorerLink: string | null;
     value: string;
     valueEth: string;
     nonce: number;
@@ -66,11 +68,18 @@ export interface TxDebugResult {
     effectiveGasPriceGwei: string | null;
     gasEfficiency: string;
     contractAddress: string | null;
+    contractAddressExplorerLink: string | null;
     logsCount: number;
     logs: TxDebugLog[];
   } | null;
   revertReason: string | null;
   trace: any;
+  decodedEvents: import("../tx-analyser").EventsEntryOutput | null;
+  decodedInputData: import("../tx-analyser").InputDataEntryOutput | null;
+  callTree: import("../tx-analyser").CallTreeEntryOutput | null;
+  gasProfile: import("../tx-analyser").GasProfilerEntryOutput | null;
+  stateChanges: import("../tx-analyser").StateChangesEntryOutput | null;
+  rawTrace: import("../tx-analyser").RawTraceEntryOutput | null;
   explorerLink: string;
 }
 
