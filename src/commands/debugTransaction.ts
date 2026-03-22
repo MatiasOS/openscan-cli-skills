@@ -120,6 +120,8 @@ export async function debugTransaction(
     receipt: receiptResult,
     revertReason,
     trace,
-    explorerLink: `http://localhost:8545`,
+    explorerLink: chainId === 31337
+      ? `http://localhost:8545/#/${chainId}/tx/${txHash}`
+      : `https://openscan.eth.link/#/${chainId}/tx/${txHash}`,
   };
 }
