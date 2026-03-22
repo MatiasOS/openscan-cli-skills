@@ -74,9 +74,9 @@ describe("isBitcoinNetwork", () => {
 });
 
 describe("resolveStrategy", () => {
-  test("defaults to fallback", () => {
-    expect(resolveStrategy()).toBe("fallback");
-    expect(resolveStrategy(undefined)).toBe("fallback");
+  test("defaults to race", () => {
+    expect(resolveStrategy()).toBe("race");
+    expect(resolveStrategy(undefined)).toBe("race");
   });
 
   test("accepts valid strategies", () => {

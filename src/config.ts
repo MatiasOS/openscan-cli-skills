@@ -93,7 +93,7 @@ export async function resolveRpcUrls(
 export type Strategy = "fallback" | "parallel" | "race";
 
 export function resolveStrategy(input?: string): Strategy {
-  if (!input) return "fallback";
+  if (!input) return "race";
   const lower = input.toLowerCase();
   if (lower === "fallback" || lower === "parallel" || lower === "race") return lower;
   throw new Error(`Unknown strategy: "${input}". Use fallback, parallel, or race.`);
