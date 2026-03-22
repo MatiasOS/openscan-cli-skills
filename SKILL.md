@@ -1,11 +1,35 @@
 ---
 name: openscan
-description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Use when asked about gas, fees, network health, latest blocks, or chain status. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
+description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions — trace execution, decode reverts, analyze gas, state changes. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
 ---
 
 # OpenScan CLI
 
 Query EVM and Bitcoin blockchain data. All output is JSON to stdout.
+
+## How to Present Results
+
+**IMPORTANT:** Never dump raw JSON to the user. Always interpret the data and provide human-readable insights tailored to the user's question.
+
+### For `stats` results, always include:
+- A plain-language summary answering the user's specific question
+- Context on whether gas prices are low/normal/high (EVM: <10 gwei is low, 10-30 is normal, >30 is elevated, >100 is high)
+- Block production health: are blocks recent? Is gas usage near limits?
+- For Bitcoin: mempool congestion level, fee tier recommendations (use fast/medium/slow estimates)
+- Any anomalies worth noting (sync issues, empty blocks, unusual gas patterns)
+
+### For `debug-tx` results, always include:
+- **Transaction summary**: What the transaction did (contract creation, token transfer, function call, etc.) in plain language
+- **Success/failure verdict**: Clearly state whether the transaction succeeded or failed
+- **If the transaction failed (`receipt.status === "reverted"`):**
+  - Explain the `revertReason` in plain language (e.g., "The contract reverted with 'insufficient balance' — the sender tried to transfer more tokens than they held")
+  - If the revert reason is a Panic code, explain what that panic means (e.g., Panic(0x11) = arithmetic overflow, Panic(0x01) = assertion failed, Panic(0x12) = division by zero, Panic(0x32) = array out of bounds)
+  - Look at the `callTree` to identify which internal call reverted and explain the call chain that led to the failure
+  - Check `stateChanges` to show what state was or wasn't modified before the revert
+  - Suggest possible causes and fixes when the context makes it clear
+- **Gas analysis**: Was gas efficiency reasonable? Did it run out of gas?
+- **Key events emitted** (from `decodedEvents`): Summarize what happened on-chain
+- **Decoded function call** (from `decodedInputData`): Explain what function was called with what parameters
 
 ## CLI Location
 
@@ -168,6 +192,37 @@ All commands output JSON. Numeric values are pre-formatted:
 | "Where did gas go in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
 | "What state changed in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
 | "Show opcodes for this tx" | `openscan debug-tx 0x... --chain hardhat` |
+
+## Example Insights
+
+### Stats insight example
+User asks: "What's gas like on Ethereum?"
+After running the command, respond like:
+> Gas on Ethereum is currently **12.3 gwei** — that's in the normal range. The base fee is 11.8 gwei with a 0.5 gwei priority tip. The latest block (#19,234,567) used 62% of its gas limit with 184 transactions, which suggests moderate activity. Good time to submit non-urgent transactions.
+
+### Failed transaction insight example
+User asks: "Why did this tx fail?"
+After running the command, respond like:
+> This transaction **reverted** with `Error("ERC20: transfer amount exceeds balance")`.
+>
+> **What happened:** Address `0xAbC...` called `transfer(0xDeF..., 1000000000000000000)` on the USDC contract, attempting to send 1 USDC. However, the sender's balance was insufficient.
+>
+> **Call chain:** The top-level `transfer()` call delegated to an internal `_transfer()` which hit the balance check and reverted. No state changes were committed.
+>
+> **Gas:** 45,231 gas was used (60% of the 75,000 limit) before the revert.
+>
+> **Fix:** Ensure the sender has enough token balance before calling transfer, or add a balance check in your contract.
+
+### Successful transaction insight example
+User asks: "What happened in this tx?"
+After running the command, respond like:
+> This transaction **succeeded** — it was a `swap()` call on Uniswap V2 Router.
+>
+> **Action:** Swapped 0.5 ETH for ~1,234 USDC via the WETH/USDC pair.
+>
+> **Events:** 4 events emitted — `Transfer` (WETH deposit), `Sync` (pair reserves updated), `Swap` (actual swap), `Transfer` (USDC to recipient).
+>
+> **Gas:** Used 152,847 gas (76% of limit) at 15.2 gwei, costing ~0.0023 ETH ($4.12).
 
 ## Security
 
