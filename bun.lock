@@ -4,6 +4,10 @@
   "workspaces": {
     "": {
       "name": "openscan-cli-skills",
+      "dependencies": {
+        "@openscan/metadata": "1.1.2-alpha.0",
+        "@openscan/network-connectors": "^1.6.0",
+      },
       "devDependencies": {
         "@types/bun": "latest",
       },
@@ -13,6 +17,10 @@
     },
   },
   "packages": {
+    "@openscan/metadata": ["@openscan/metadata@1.1.2-alpha.0", "", {}, "sha512-Zxa0Sah22oBcBuC5FRninsOTqlpw//wZNpQ0CPwsk1hBv/ouk2qYfs4+sXNKrLeknhVReJjDJtoMEtWojEm5VA=="],
+
+    "@openscan/network-connectors": ["@openscan/network-connectors@1.6.0", "", {}, "sha512-f7Ox20+NIJ4DXzcbj0OyyuVjiHB0zjm1xv+yhzrYhh6TfW6bfHpq62+++oF6/5ud5VLptRXSkdaMrLcAOJL0vQ=="],
+
     "@types/bun": ["@types/bun@1.3.11", "", { "dependencies": { "bun-types": "1.3.11" } }, "sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg=="],
 
     "@types/node": ["@types/node@25.5.0", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw=="],
