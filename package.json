@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@openscan/metadata": "1.1.2-alpha.0",
-    "@openscan/network-connectors": "^1.6.0"
+    "@openscan/network-connectors": "^1.6.0",
+    "viem": "^2.47.6"
   }
 }
