@@ -1,7 +1,15 @@
 {
   "name": "openscan-cli-skills",
+  "version": "0.1.0",
   "module": "index.ts",
   "type": "module",
+  "bin": {
+    "openscan": "./bin/openscan.ts"
+  },
+  "scripts": {
+    "start": "bun bin/openscan.ts",
+    "test": "bun test"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
