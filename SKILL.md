@@ -1,6 +1,6 @@
 ---
 name: openscan
-description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions — trace execution, decode reverts, analyze gas, state changes. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
+description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions on any EVM network — trace execution, decode reverts, analyze gas, state changes, call trees, opcodes. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Hardhat, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
 ---
 
 # OpenScan CLI
@@ -72,18 +72,18 @@ openscan stats [--chain <chain>] [--strategy <strategy>] [--rpc <url>]
 - `latestBlocks` — 3 most recent blocks (height, hash, timestamp, txCount, size, weight, difficulty)
 - `explorerLink` — Link to mempool.space
 
-### debug-tx — Transaction Debugger (Hardhat only)
+### debug-tx — Transaction Debugger
 
 ```bash
-openscan debug-tx <txHash> [--chain hardhat] [--rpc <url>]
+openscan debug-tx <txHash> [--chain <chain>] [--rpc <url>]
 ```
 
-Debugs a transaction on a local Hardhat node. Always includes execution trace and revert reason decoding.
+Debugs a transaction on any EVM network. Always includes execution trace and revert reason decoding. Requires the RPC node to support `debug_traceTransaction` (Hardhat, Anvil, Geth with `--http.api debug`, Erigon, etc.).
 
 **Output fields:**
-- `chainId` — Chain ID (31337)
-- `networkName` — Network name (Hardhat)
-- `currency` — Native currency (ETH)
+- `chainId` — Numeric chain ID
+- `networkName` — Human-readable network name
+- `currency` — Native currency symbol
 - `transaction` — Transaction details:
   - `hash`, `from`, `to`, `value`, `valueEth` — Basic tx info
   - `nonce`, `gas`, `type` — Tx metadata
@@ -182,16 +182,16 @@ All commands output JSON. Numeric values are pre-formatted:
 | "BTC fees right now?" | `openscan stats --chain btc` |
 | "Bitcoin testnet status?" | `openscan stats --chain btc-testnet` |
 | "How full is the Bitcoin mempool?" | `openscan stats --chain bitcoin` |
-| "Debug this transaction 0x..." | `openscan debug-tx 0x... --chain hardhat` |
-| "Why did this tx revert?" | `openscan debug-tx 0x... --chain hardhat` |
-| "Trace transaction 0x..." | `openscan debug-tx 0x... --chain hardhat` |
-| "What happened in this Hardhat tx?" | `openscan debug-tx 0x... --chain hardhat` |
-| "What events did this tx emit?" | `openscan debug-tx 0x... --chain hardhat` |
-| "Decode the calldata for this tx" | `openscan debug-tx 0x... --chain hardhat` |
-| "Show me the call tree for this tx" | `openscan debug-tx 0x... --chain hardhat` |
-| "Where did gas go in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
-| "What state changed in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
-| "Show opcodes for this tx" | `openscan debug-tx 0x... --chain hardhat` |
+| "Debug this transaction 0x..." | `openscan debug-tx 0x...` |
+| "Why did this tx revert?" | `openscan debug-tx 0x...` |
+| "Trace transaction 0x..." | `openscan debug-tx 0x...` |
+| "What happened in this tx on Base?" | `openscan debug-tx 0x... --chain base` |
+| "What events did this tx emit?" | `openscan debug-tx 0x...` |
+| "Decode the calldata for this tx" | `openscan debug-tx 0x...` |
+| "Show me the call tree for this tx" | `openscan debug-tx 0x...` |
+| "Where did gas go in this tx?" | `openscan debug-tx 0x...` |
+| "What state changed in this tx?" | `openscan debug-tx 0x...` |
+| "Show opcodes for this tx" | `openscan debug-tx 0x...` |
 
 ## Example Insights
 

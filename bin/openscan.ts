@@ -47,7 +47,7 @@ Usage: openscan <command> [args] [options]
 
 Commands:
   stats                     Network stats (gas, blocks, sync status)
-  debug-tx <txHash>         Debug a Hardhat transaction (trace + revert decoding)
+  debug-tx <txHash>         Debug a transaction (trace + revert decoding)
   help                      Show this help message
 
 Options:
@@ -99,7 +99,7 @@ async function main() {
         }
         const txHash = positional[0];
         if (!txHash) {
-          throw new Error('Transaction hash required. Usage: openscan debug-tx <txHash> [--chain hardhat]');
+          throw new Error('Transaction hash required. Usage: openscan debug-tx <txHash> [--chain <chain>]');
         }
         result = await debugTransaction(client, networkId as number, txHash);
         break;

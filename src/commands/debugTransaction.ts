@@ -14,9 +14,7 @@ import {
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 
 function addressExplorerLink(chainId: number, address: string): string {
-  return chainId === 31337
-    ? `http://localhost:8545/#/${chainId}/address/${address}`
-    : `https://openscan.eth.link/#/${chainId}/address/${address}`;
+  return `https://openscan.eth.link/#/${chainId}/address/${address}`;
 }
 
 export async function debugTransaction(
@@ -24,10 +22,6 @@ export async function debugTransaction(
   chainId: number,
   txHash: string,
 ): Promise<TxDebugResult> {
-  if (chainId !== 31337) {
-    throw new Error("debug-tx is only available for Hardhat (--chain hardhat)");
-  }
-
   if (!TX_HASH_RE.test(txHash)) {
     throw new Error(`Invalid transaction hash: "${txHash}". Must be a 0x-prefixed 32-byte hex string.`);
   }
@@ -165,7 +159,7 @@ export async function debugTransaction(
 
   return {
     chainId,
-    networkName: networkInfo?.name ?? "Hardhat",
+    networkName: networkInfo?.name ?? `Chain ${chainId}`,
     currency: networkInfo?.currency ?? "ETH",
     transaction,
     receipt: receiptResult,
@@ -177,8 +171,6 @@ export async function debugTransaction(
     gasProfile,
     stateChanges,
     rawTrace,
-    explorerLink: chainId === 31337
-      ? `http://localhost:8545/#/${chainId}/tx/${txHash}`
-      : `https://openscan.eth.link/#/${chainId}/tx/${txHash}`,
+    explorerLink: `https://openscan.eth.link/#/${chainId}/tx/${txHash}`,
   };
 }
