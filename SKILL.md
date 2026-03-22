@@ -1,6 +1,6 @@
 ---
 name: openscan-cli-skills
-description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions on any EVM network — trace execution, decode reverts, analyze gas, state changes, call trees, opcodes. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Hardhat, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
+description: Query EVM and Bitcoin blockchain network stats — gas prices, fees, latest blocks, sync status, mempool, difficulty. Debug and explain transactions on any EVM or Bitcoin network — trace execution, decode reverts, analyze gas/fees, state changes, call trees, opcodes, UTXO analysis, script decoding. Use when asked about gas, fees, network health, latest blocks, chain status, or to debug/explain transactions. Supports Ethereum, Base, Arbitrum, Optimism, Polygon, BNB, Avalanche, Sepolia, Hardhat, Bitcoin. Powered by @openscan/network-connectors and @openscan/metadata.
 ---
 
 # OpenScan CLI
@@ -18,7 +18,7 @@ Query EVM and Bitcoin blockchain data. All output is JSON to stdout.
 - For Bitcoin: mempool congestion level, fee tier recommendations (use fast/medium/slow estimates)
 - Any anomalies worth noting (sync issues, empty blocks, unusual gas patterns)
 
-### For `debug-tx` results, always include:
+### For EVM `debug-tx` results, always include:
 - **Transaction summary**: What the transaction did (contract creation, token transfer, function call, etc.) in plain language
 - **Success/failure verdict**: Clearly state whether the transaction succeeded or failed
 - **If the transaction failed (`receipt.status === "reverted"`):**
@@ -30,6 +30,18 @@ Query EVM and Bitcoin blockchain data. All output is JSON to stdout.
 - **Gas analysis**: Was gas efficiency reasonable? Did it run out of gas?
 - **Key events emitted** (from `decodedEvents`): Summarize what happened on-chain
 - **Decoded function call** (from `decodedInputData`): Explain what function was called with what parameters
+
+### For Bitcoin `debug-tx` results, always include:
+- **Transaction summary**: What the transaction did — how much BTC moved, from where, to where, transaction type (P2WPKH, P2TR, etc.)
+- **Confirmation status**: Confirmed (with block height, confirmations, timestamp) or unconfirmed (with mempool details)
+- **Fee analysis**: Fee in sats, fee rate in sat/vB, assessment vs current fee estimates (overpaying/reasonable/underpaying)
+- **Inputs breakdown**: List inputs with their source addresses, values, and script types
+- **Outputs breakdown**: List outputs with destination addresses, values, script types, and whether spent/unspent
+- **UTXO context**: Explain the UTXO model for users unfamiliar — inputs are consumed, outputs are created, difference is the fee
+- **SegWit/Taproot indicators**: Note if the transaction uses SegWit (witness data) or Taproot
+- **RBF status**: Note if the transaction is replaceable (Replace-By-Fee enabled)
+- **For unconfirmed transactions**: Show mempool entry details, ancestor/descendant chains, and fee position relative to estimates
+- **Address classification**: Identify address types (legacy P2PKH, P2SH, native SegWit, Taproot)
 
 ## CLI Location
 
@@ -89,17 +101,22 @@ Provides a comprehensive analysis of the network stats, including:
 openscan debug-tx <txHash> [--chain <chain>] [--rpc <url>]
 ```
 
-Debugs a transaction on any EVM network. Always includes execution trace and revert reason decoding. Requires the RPC node to support `debug_traceTransaction` (Hardhat, Anvil, Geth with `--http.api debug`, Erigon, etc.).
+Debugs a transaction on any EVM or Bitcoin network.
+
+For **EVM networks**: Includes execution trace and revert reason decoding. Requires the RPC node to support `debug_traceTransaction` (Hardhat, Anvil, Geth with `--http.api debug`, Erigon, etc.).
+
+For **Bitcoin networks**: Analyzes transaction inputs/outputs, fee rates, script types, UTXO status, block inclusion, and mempool state. Bitcoin txids are 64-char hex without `0x` prefix (a leading `0x` is auto-stripped).
 
 Provides a comprehensive analysis of the transaction, including:
-- What Happened: Function calls, events, state changes
-- Why It Failed (if applicable): Revert reason decoding, call tree analysis, state change review
-- Gas Analysis: Total gas used, efficiency, and cost breakdown
-- Call Tree: Annotated call tree with decoded calls and errors
-- State Changes: Per-address balance, nonce, code, and storage diffs
-- Opcode Trace: Paginated step-by-step opcode execution with stack and storage snapshots
+- What Happened: Function calls, events, state changes (EVM) / inputs, outputs, value flow (Bitcoin)
+- Why It Failed (if applicable): Revert reason decoding, call tree analysis, state change review (EVM only)
+- Fee Analysis: Gas used, efficiency, and cost breakdown (EVM) / fee rate in sat/vB vs current estimates (Bitcoin)
+- Call Tree: Annotated call tree with decoded calls and errors (EVM only)
+- State Changes: Per-address balance, nonce, code, and storage diffs (EVM only)
+- UTXO Analysis: Input sources, output destinations, spent/unspent status, script types (Bitcoin only)
+- Mempool Analysis: Ancestor/descendant chains, fee position, RBF status (Bitcoin, unconfirmed only)
 
-**Output fields:**
+**EVM output fields:**
 - `chainId` — Numeric chain ID
 - `networkName` — Human-readable network name
 - `currency` — Native currency symbol
@@ -141,7 +158,67 @@ Provides a comprehensive analysis of the transaction, including:
   - `summary` — `steps`, `gas`, `failed`
   - `pagination` — `page`, `totalPages`, `fromStep`, `toStep`
   - `rows[]` — Per-step: `pc`, `op`, `gas`, `gasCost`, `depth`, `stack`, `storage`
-- `explorerLink` — Link to local node
+- `explorerLink` — Link to OpenScan explorer
+
+**Bitcoin output fields:**
+- `networkId` — BIP-122 network identifier
+- `networkName` — Human-readable network name
+- `currency` — Native currency symbol (BTC)
+- `transaction` — Transaction metadata:
+  - `txid` — Transaction ID
+  - `hash` — Witness transaction ID (wtxid, differs from txid for SegWit)
+  - `version`, `size`, `vsize`, `weight` — Transaction size metrics
+  - `locktime`, `locktimeInterpretation` — Locktime value and human-readable interpretation
+  - `isSegWit` — Whether the transaction uses SegWit (witness data)
+  - `isRBF` — Whether Replace-By-Fee is signaled (any input sequence < 0xfffffffe)
+  - `isCoinbase` — Whether this is a coinbase (mining reward) transaction
+  - `confirmations` — Number of confirmations (null if unconfirmed)
+- `inputs[]` — Transaction inputs:
+  - `index` — Input index
+  - `prevTxid`, `prevVout` — Source UTXO reference (null for coinbase)
+  - `value` — Input value in BTC (from prevout data)
+  - `address` — Source address
+  - `scriptSig` — Input script (asm + hex)
+  - `witness` — SegWit witness data array
+  - `sequence`, `sequenceHex` — Sequence number (decimal + hex)
+  - `scriptType` — Script type (witness_v0_keyhash, witness_v1_taproot, etc.)
+  - `coinbase` — Coinbase hex data (only for coinbase transactions)
+- `outputs[]` — Transaction outputs:
+  - `index` — Output index
+  - `value` — Output value in BTC
+  - `address` — Destination address
+  - `scriptPubKey` — Output script (asm, hex, type, desc)
+  - `scriptType` — Script type (pubkeyhash, scripthash, witness_v0_keyhash, witness_v1_taproot, nulldata, etc.)
+  - `isSpent` — Whether the output has been spent (true/false/null if unknown)
+- `feeAnalysis` — Fee breakdown:
+  - `totalInputValue` — Sum of all input values in BTC (null if prevout data unavailable)
+  - `totalOutputValue` — Sum of all output values in BTC
+  - `fee` — Transaction fee in BTC
+  - `feeSats` — Transaction fee in satoshis
+  - `feeRate` — Fee rate in sat/vB
+  - `currentFeeEstimates` — Current network fee estimates:
+    - `fast` — 2-block target (feeRate in BTC/kB + block count)
+    - `medium` — 6-block target
+    - `slow` — 24-block target
+  - `feeAssessment` — Fee assessment: "overpaying", "reasonable (fast)", "reasonable", "underpaying", "very low"
+- `blockInclusion` — Block details (confirmed transactions):
+  - `isConfirmed`, `blockhash`, `blockHeight`, `blockTime` (ISO 8601)
+  - `confirmations` — Number of confirmations
+  - `positionInBlock` — Transaction index within the block
+  - `blockTxCount`, `blockSize`, `blockWeight` — Block metrics
+- `mempool` — Mempool details (unconfirmed transactions):
+  - `isInMempool` — Whether the transaction is in the mempool
+  - `entry` — Mempool entry: `vsize`, `weight`, `fees` (base/modified/ancestor/descendant), `time`, `height`, ancestor/descendant counts and sizes, `depends`, `spentby`
+  - `ancestors` — Full ancestor transaction details
+  - `descendants` — Full descendant transaction details
+- `addresses[]` — Address analysis:
+  - `address` — Bitcoin address
+  - `isValid` — Whether the address is valid
+  - `type` — Address type: "legacy", "p2sh", "segwit", "taproot"
+  - `witnessVersion` — Witness program version (0 for SegWit, 1 for Taproot)
+  - `role` — "input", "output", or "both"
+- `transactionTypeClassification` — Transaction type: "P2WPKH transfer", "P2TR transfer", "Coinbase", "Mixed transfer", "OP_RETURN data", etc.
+- `explorerLink` — Link to mempool.space
 
 ## Options
 
@@ -211,6 +288,13 @@ All commands output JSON. Numeric values are pre-formatted:
 | "Where did gas go in this tx?" | `openscan debug-tx 0x...` |
 | "What state changed in this tx?" | `openscan debug-tx 0x...` |
 | "Show opcodes for this tx" | `openscan debug-tx 0x...` |
+| "Debug this Bitcoin transaction" | `openscan debug-tx <txid> --chain bitcoin` |
+| "What did this BTC tx do?" | `openscan debug-tx <txid> --chain btc` |
+| "Check Bitcoin tx fee" | `openscan debug-tx <txid> --chain bitcoin` |
+| "Is this BTC tx confirmed?" | `openscan debug-tx <txid> --chain btc` |
+| "Analyze this Bitcoin transaction" | `openscan debug-tx <txid> --chain bitcoin` |
+| "BTC tx inputs and outputs?" | `openscan debug-tx <txid> --chain btc` |
+| "Bitcoin testnet tx debug" | `openscan debug-tx <txid> --chain btc-testnet` |
 
 ## Example Insights
 
@@ -242,6 +326,30 @@ After running the command, respond like:
 > **Events:** 4 events emitted — `Transfer` (WETH deposit), `Sync` (pair reserves updated), `Swap` (actual swap), `Transfer` (USDC to recipient).
 >
 > **Gas:** Used 152,847 gas (76% of limit) at 15.2 gwei, costing ~0.0023 ETH ($4.12).
+
+### Bitcoin transaction insight example
+User asks: "Debug this Bitcoin tx"
+After running the command, respond like:
+> This is a **P2WPKH transfer** with **1,234 confirmations** (block #840,000).
+>
+> **Inputs (2):** 0.05 BTC from `bc1q...abc` + 0.03 BTC from `bc1q...def` = **0.08 BTC total**
+>
+> **Outputs (2):** 0.07 BTC to `bc1q...xyz` (unspent) + 0.0099 BTC change back to `bc1q...abc` (spent)
+>
+> **Fee:** 10,000 sats (0.0001 BTC) at **12.5 sat/vB** — that's reasonable for current network conditions (fast estimate is ~15 sat/vB).
+>
+> **Details:** Native SegWit transaction, RBF was not signaled, no locktime restrictions. Transaction is 800 vbytes with 2 witness inputs.
+
+### Bitcoin unconfirmed transaction insight example
+User asks: "Is this BTC tx confirmed yet?"
+After running the command, respond like:
+> This transaction is **unconfirmed** and currently sitting in the mempool.
+>
+> **Fee rate:** 5.2 sat/vB — this is **underpaying** compared to current estimates (fast: 15 sat/vB, medium: 8 sat/vB, slow: 3 sat/vB). It should confirm within ~24 blocks at current fee levels.
+>
+> **Mempool position:** 2 ancestors, 0 descendants. The transaction depends on 1 other unconfirmed tx.
+>
+> **RBF:** Enabled — the sender can bump the fee if needed to speed up confirmation.
 
 ## Security
 

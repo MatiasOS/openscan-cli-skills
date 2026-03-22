@@ -6,6 +6,7 @@ import { formatOutput } from "../src/formatter";
 import { getNetworkStats } from "../src/commands/getNetworkStats";
 import { getBitcoinStats } from "../src/commands/getBitcoinStats";
 import { debugTransaction } from "../src/commands/debugTransaction";
+import { debugBitcoinTransaction } from "../src/commands/debugBitcoinTransaction";
 
 interface ParsedArgs {
   command: string;
@@ -94,14 +95,15 @@ async function main() {
         }
         break;
       case "debug-tx": {
-        if (isBitcoinNetwork(networkId)) {
-          throw new Error("debug-tx is only available for EVM networks");
-        }
         const txHash = positional[0];
         if (!txHash) {
           throw new Error('Transaction hash required. Usage: openscan debug-tx <txHash> [--chain <chain>]');
         }
-        result = await debugTransaction(client, networkId as number, txHash);
+        if (isBitcoinNetwork(networkId)) {
+          result = await debugBitcoinTransaction(client, networkId as string, txHash);
+        } else {
+          result = await debugTransaction(client, networkId as number, txHash);
+        }
         break;
       }
       default:

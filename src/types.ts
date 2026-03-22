@@ -93,6 +93,110 @@ export interface BtcBlockSummary {
   difficulty: number;
 }
 
+export interface BtcTxInput {
+  index: number;
+  prevTxid: string | null;
+  prevVout: number | null;
+  value: number | null;
+  address: string | null;
+  scriptSig: { asm: string; hex: string } | null;
+  witness: string[] | null;
+  sequence: number;
+  sequenceHex: string;
+  scriptType: string | null;
+  coinbase: string | null;
+}
+
+export interface BtcTxOutput {
+  index: number;
+  value: number;
+  address: string | null;
+  scriptPubKey: { asm: string; hex: string; type: string; desc?: string };
+  scriptType: string;
+  isSpent: boolean | null;
+}
+
+export interface BtcAddressInfo {
+  address: string;
+  isValid: boolean;
+  type: string | null;
+  witnessVersion: number | null;
+  role: "input" | "output" | "both";
+}
+
+export interface BtcMempoolDetails {
+  isInMempool: boolean;
+  entry: {
+    vsize: number;
+    weight: number;
+    fees: { base: number; modified: number; ancestor: number; descendant: number };
+    time: string;
+    height: number;
+    ancestorCount: number;
+    ancestorSize: number;
+    descendantCount: number;
+    descendantSize: number;
+    depends: string[];
+    spentby: string[];
+  } | null;
+  ancestors: Record<string, unknown> | null;
+  descendants: Record<string, unknown> | null;
+}
+
+export interface BtcBlockInclusion {
+  isConfirmed: boolean;
+  blockhash: string | null;
+  blockHeight: number | null;
+  blockTime: string | null;
+  confirmations: number | null;
+  positionInBlock: number | null;
+  blockTxCount: number | null;
+  blockSize: number | null;
+  blockWeight: number | null;
+}
+
+export interface BtcFeeAnalysis {
+  totalInputValue: number | null;
+  totalOutputValue: number;
+  fee: number | null;
+  feeSats: number | null;
+  feeRate: number | null;
+  currentFeeEstimates: {
+    fast: { feeRate: number | null; blocks: number };
+    medium: { feeRate: number | null; blocks: number };
+    slow: { feeRate: number | null; blocks: number };
+  };
+  feeAssessment: string | null;
+}
+
+export interface BtcTxDebugResult {
+  networkId: string;
+  networkName: string | null;
+  currency: string | null;
+  transaction: {
+    txid: string;
+    hash: string;
+    version: number;
+    size: number;
+    vsize: number;
+    weight: number;
+    locktime: number;
+    locktimeInterpretation: string;
+    isSegWit: boolean;
+    isRBF: boolean;
+    isCoinbase: boolean;
+    confirmations: number | null;
+  };
+  inputs: BtcTxInput[];
+  outputs: BtcTxOutput[];
+  feeAnalysis: BtcFeeAnalysis;
+  blockInclusion: BtcBlockInclusion | null;
+  mempool: BtcMempoolDetails | null;
+  addresses: BtcAddressInfo[];
+  transactionTypeClassification: string;
+  explorerLink: string;
+}
+
 export interface BitcoinStatsResult {
   networkId: string;
   networkName: string | null;
