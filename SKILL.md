@@ -77,6 +77,27 @@ Debugs a transaction on a local Hardhat node. Always includes execution trace an
   - `logsCount`, `logs` — Emitted event logs (logIndex, address, topics, data)
 - `revertReason` — Decoded revert reason for failed txs (Error(string), Panic codes, or custom error selector)
 - `trace` — Full execution trace from `debug_traceTransaction` (call tree via callTracer)
+- `decodedEvents` — Decoded event logs with signature lookup:
+  - `total` — Number of logs emitted
+  - `logs[]` — Per-log: `index`, `address`, `topics`, `data`, `decodeSource` (enrichedAbi/signatureDb/raw), `decoded` (name, signature, params with name/type/value/indexed)
+- `decodedInputData` — Decoded function call input:
+  - `rawInputData` — Raw hex calldata
+  - `decodedCall` — Decoded function name, signature, and params (if ABI available)
+  - `decodeSource` — How it was decoded (provided/enrichedAbi/none)
+  - `utf8Text` — UTF-8 text interpretation (fallback when no ABI match)
+- `callTree` — Annotated call tree with summary:
+  - `summary` — `totalCalls`, `totalReverts`, `gasUsed`, `typeCounts` (CALL/STATICCALL/DELEGATECALL counts)
+  - `root` — Recursive tree of annotated calls with `contractName`, `decodedCall`, `error`, `revertReason`
+- `gasProfile` — Gas flame graph breakdown:
+  - `totalGas`, `zoomGas`, `isZoomed`
+  - `flame` — Recursive flame tree nodes with `label`, `gas`, `widthPct`, `color`, `type`
+- `stateChanges` — Per-address state diffs:
+  - `totalChangedAddresses` — Number of addresses with state changes
+  - `changes[]` — Per-address: `balance` (before/after/diff), `nonce`, `code`, `storage[]` (slot/before/after)
+- `rawTrace` — Paginated opcode-level trace:
+  - `summary` — `steps`, `gas`, `failed`
+  - `pagination` — `page`, `totalPages`, `fromStep`, `toStep`
+  - `rows[]` — Per-step: `pc`, `op`, `gas`, `gasCost`, `depth`, `stack`, `storage`
 - `explorerLink` — Link to local node
 
 ## Options
@@ -141,6 +162,12 @@ All commands output JSON. Numeric values are pre-formatted:
 | "Why did this tx revert?" | `openscan debug-tx 0x... --chain hardhat` |
 | "Trace transaction 0x..." | `openscan debug-tx 0x... --chain hardhat` |
 | "What happened in this Hardhat tx?" | `openscan debug-tx 0x... --chain hardhat` |
+| "What events did this tx emit?" | `openscan debug-tx 0x... --chain hardhat` |
+| "Decode the calldata for this tx" | `openscan debug-tx 0x... --chain hardhat` |
+| "Show me the call tree for this tx" | `openscan debug-tx 0x... --chain hardhat` |
+| "Where did gas go in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
+| "What state changed in this tx?" | `openscan debug-tx 0x... --chain hardhat` |
+| "Show opcodes for this tx" | `openscan debug-tx 0x... --chain hardhat` |
 
 ## Security
 
